@@ -29,6 +29,7 @@ input,textarea{font:inherit;width:100%;box-sizing:border-box;padding:12px;border
 #cp{display:none;background:var(--card);border:2px solid var(--bd);border-radius:14px;padding:10px;margin-bottom:8px;width:230px}
 #cd{font-size:26px;text-align:right;min-height:34px;overflow:hidden;margin-bottom:6px}
 .k{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.k button{padding:8px 0;min-height:42px}
+main.prof{max-width:1200px}#pg{display:grid;grid-template-columns:1fr}aside{display:none}#pq{background:#fff;padding:8px;border-radius:10px}@media(min-width:980px){#pg{grid-template-columns:210px 1fr 210px;gap:16px}aside{display:block}}
 table{width:100%;border-collapse:collapse}td{padding:3px 6px;vertical-align:top}
 </style></head><body><main id="app"></main>
 <div id="calc"><div id="cp"><div id="cd">0</div><div class="k" id="ck"></div></div><button onclick="tgl()">🧮 Calculadora</button></div>
@@ -43,12 +44,12 @@ let ONLINE=typeof firebase!=='undefined'&&CONFIG.apiKey!=="COLE_AQUI";
 const DIAS=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo','Elaborar problema'];
 /* Condições sorteadas: [texto, valor, etiqueta/papéis]. Editáveis. */
 const POOL={
-trab:[['carteira assinada',650,'clt'],['trabalho autônomo, com renda irregular',690,'aut'],['aposentadoria',620,'apos'],['diárias e bicos',600,'aut']],
+trab:[['trabalho com carteira assinada',650,'clt'],['trabalho autônomo, com renda irregular',690,'aut'],['aposentadoria',620,'apos'],['diárias e bicos',600,'aut']],
 mor:[['paga aluguel',180,''],['tem casa própria',100,''],['mora em casa cedida por parente',120,'ap']],
 pes:[['casal com 2 filhos',1,['Pai','Mãe','Filho (12)','Filha (8)']],['mãe solo com 3 filhos',1.2,['Mãe','Filho (14)','Filha (9)','Filho (4)']],['casal sem filhos',.7,['Marido','Esposa','Irmão','Cunhada']],['casal de idosos com um neto',.9,['Avô','Avó','Neto (10)','Tia']]],
-div:[['sem dívidas',0],['carnê de móveis (R$ 40 por semana)',40],['parcela da moto (R$ 60 por semana)',60]],
-res:[['sem reserva',0],['reserva pequena de R$ 40',40],['reserva de R$ 100',100]],
-sau:[['todos com saúde estável',0,''],['uma pessoa com remédio contínuo (R$ 30 por semana)',30,'cron']]};
+div:[['não tem dívidas',0],['paga um carnê de móveis (R$ 40 por semana)',40],['paga a parcela da moto (R$ 60 por semana)',60]],
+res:[['não tem reserva',0],['tem uma reserva pequena de R$ 40',40],['tem uma reserva de R$ 100',100]],
+sau:[['todos têm saúde estável',0,''],['uma pessoa toma remédio contínuo (R$ 30 por semana)',30,'cron']]};
 const SHOP=[
 ['🍚 Alimentação básica (arroz, feijão, óleo)',[['Não comprar',0,0,0],['Econômica',120,2,0],['Normal',160,3,0],['Premium',210,3,1]]],
 ['🍗 Carnes, ovos e verduras',[['Não comprar',0,0,0],['Poucas',100,2,0],['Normal',150,3,0],['Bastante',210,3,1]]],
@@ -98,7 +99,7 @@ const rnd=a=>a[Math.floor(Math.random()*a.length)],R2=v=>Math.round(v*100)/100,s
 const m=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const fmt=ms=>{const s=Math.round(Math.max(0,ms)/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
-function sorteio(){let c;for(let i=0;i<400;i++){const t=rnd(POOL.trab),mo=rnd(POOL.mor),pe=rnd(POOL.pes),dv=rnd(POOL.div),rs=rnd(POOL.res),sa=rnd(POOL.sau),ini=t[1]+rs[1]-mo[1]-dv[1]-sa[1];
+function sorteio(){let c;for(let i=0;i<400;i++){const pe=rnd(POOL.pes),t=pe[0].includes('idosos')?POOL.trab[2]:rnd(POOL.trab),mo=rnd(POOL.mor),dv=rnd(POOL.div),rs=rnd(POOL.res),sa=rnd(POOL.sau),ini=t[1]+rs[1]-mo[1]-dv[1]-sa[1];
 c={t:t[0],mo:mo[0],pe:pe[0],dv:dv[0],rs:rs[0],sa:sa[0],f:pe[1],roles:pe[2],tags:[t[2],mo[2],sa[2]].filter(Boolean),renda:t[1],fx:mo[1],pc:dv[1],rv:rs[1],sd:sa[1],ini};if(ini>=430&&ini<=560)break}return c}
 function norm(v){['hist','log','ev','pick','time'].forEach(k=>{v[k]=v[k]?Object.values(v[k]):[]});if(!v.pick.length)v.pick=[1,1,1,1];while(v.time.length<8)v.time.push(0);v.membros=v.membros||{};v.cond.tags=v.cond.tags?Object.values(v.cond.tags):[];v.cond.roles=Object.values(v.cond.roles||[]);return v}
 function boot(cb){if(!ONLINE){cb();return}
@@ -147,7 +148,7 @@ function drawEnt(){const on=ONLINE;return `<h1>📅 Uma Semana em Açailândia</
 <h2>Seu nome</h2><input id="in" placeholder="Digite seu nome" value="${ls('mv_me')||''}">${on?`<h2>Código da sala</h2><input id="is" placeholder="Ex.: 4821" value="${SALA}">`:''}
 <h2>Criar um grupo</h2><input id="ig" placeholder="Nome do grupo"><button onclick="criar()">Criar grupo e sortear a família</button>${on?`<h2>Ou entrar em um grupo</h2><input id="ic" placeholder="Código do grupo (4 letras)"><button class="s" onclick="entrar()">Entrar no grupo</button>`:''}`}
 function drawG(){const C=G.cond,s=G.step;let h='';
-if(s==='perfil'){const ids=Object.keys(G.membros);h=`<h1>${G.nome}</h1><p class="mu">Código do grupo: <b>${G.cod}</b></p><div class="c"><p>Vocês são uma família com <b>${C.pe}</b>. A renda vem de <b>${C.t}</b>. A família <b>${C.mo}</b>, está <b>${C.dv}</b>, tem <b>${C.rs}</b> e <b>${C.sa}</b>.</p></div>
+if(s==='perfil'){const ids=Object.keys(G.membros);h=`<h1>${G.nome}</h1><p class="mu">Código do grupo: <b>${G.cod}</b></p><div class="c"><p>Composição da família: <b>${C.pe}</b>.<br>Fonte de renda: <b>${C.t}</b>.<br>A família <b>${C.mo}</b>, <b>${C.dv}</b>, <b>${C.rs}</b> e <b>${C.sa}</b>.</p></div>
 <div class="c"><div class="row"><span>Renda da semana</span><b>${m(C.renda)}</b></div><div class="row"><span>Reserva guardada</span><b>${m(C.rv)}</b></div><div class="row"><span>Moradia</span><b class="bad">−${m(C.fx)}</b></div><div class="row"><span>Parcelas e remédios</span><b class="bad">−${m(C.pc+C.sd)}</b></div><hr style="border:0;border-top:1px solid var(--bd)"><div class="row"><span>Sobra para a semana</span><b>${m(C.ini)}</b></div></div>
 <h2>Quem é quem</h2><div class="c">${ids.map((k,i)=>`${G.membros[k].n}: <b>${C.roles[i%C.roles.length]||'Integrante'}</b>`).join('<br>')}</div><p class="mu">Conversem 1 minuto: o que mais preocupa a família?</p><button onclick="start()">Começar a semana</button>`}
 if(s==='shop'){const t=shopTotal();h=hdr()+`<h1>Segunda: compras</h1><p class="mu">Os preços já consideram o tamanho da família. Só aparecem as opções que cabem no saldo.</p>`;
@@ -172,11 +173,29 @@ return h}
 function draw(){if(PROF)return drawProf();document.getElementById('app').innerHTML=G?drawG():drawEnt()}
 /* ---------- Painel do professor ---------- */
 let pSala='',pOn=false;
-function drawProf(){const a=document.getElementById('app');if(!ONLINE){a.innerHTML='<h1>Painel do professor</h1><div class="c bad">Configure o Firebase no começo do arquivo (CONFIG) para usar o painel.</div>';return}
-if(!pOn){pOn=true;pSala=ls('mv_ps')||String(Math.floor(1000+Math.random()*9000));ls('mv_ps',pSala);const link=location.href.split('?')[0]+'?sala='+pSala;
-a.innerHTML=`<h1>Painel do professor</h1><div class="c row"><div><div class="mu">Código da sala</div><div class="big" style="text-align:left">${pSala}</div><div class="mu" style="word-break:break-all">${link}</div></div><div id="pq"></div></div><div id="pl"></div>`;
-new QRCode(document.getElementById('pq'),{text:link,width:150,height:150});
-db.ref('mv/'+pSala+'/grupos').on('value',s=>{const o=s.val()||{};document.getElementById('pl').innerHTML=Object.values(o).map(g=>{try{return card(norm(g))}catch(e){return''}}).join('')||'<p class="mu">Aguardando grupos…</p>'})}}
+/* Desenhos do painel: coloque aqui caminhos de imagens do repositório (ex.: 'img/mercado.png') ou use o botão "+ adicionar desenho" no próprio painel */
+const IMG_ESQ=[],IMG_DIR=[];
+const lk=()=>location.href.split('?')[0]+'?sala='+pSala;
+function imgs(k){let a=(k==='e'?IMG_ESQ:IMG_DIR).slice();try{a=a.concat(JSON.parse(ls('mv_i'+k)||'[]'))}catch(e){}return a}
+function side(k){const a=imgs(k),art=k==='e'?[['🛒','Compras'],['🚌','Transporte'],['🏠','Moradia']]:[['💊','Saúde'],['💡','Contas'],['🧮','Porcentagem']];
+return (a.length?a.map((u,i)=>`<img src="${u}" alt="" style="width:100%;border-radius:14px;margin-bottom:10px;cursor:pointer" onclick="rmImg('${k}',${i})">`).join(''):art.map(x=>`<div class="c" style="text-align:center"><div style="font-size:64px">${x[0]}</div><b>${x[1]}</b></div>`).join(''))+`<label class="mu" style="cursor:pointer;display:block">+ adicionar desenho<input type="file" accept="image/*" hidden onchange="addImg('${k}',this)"></label>`}
+function sides(){document.getElementById('se').innerHTML=side('e');document.getElementById('sd').innerHTML=side('d')}
+function addImg(k,inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const z=Math.min(1,420/im.width),c=document.createElement('canvas');c.width=im.width*z;c.height=im.height*z;c.getContext('2d').drawImage(im,0,0,c.width,c.height);let a=[];try{a=JSON.parse(ls('mv_i'+k)||'[]')}catch(e){}a.push(c.toDataURL('image/jpeg',.8));ls('mv_i'+k,JSON.stringify(a));sides()};im.src=r.result};r.readAsDataURL(f)}
+function rmImg(k,i){const b=(k==='e'?IMG_ESQ:IMG_DIR).length;if(i<b||!confirm('Remover este desenho?'))return;let a=[];try{a=JSON.parse(ls('mv_i'+k)||'[]')}catch(e){}a.splice(i-b,1);ls('mv_i'+k,JSON.stringify(a));sides()}
+function bigQR(){const o=document.createElement('div');o.style.cssText='position:fixed;inset:0;background:#fff;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#111;cursor:pointer';const z=Math.floor(Math.min(innerWidth,innerHeight)*.65);
+o.innerHTML=`<div id="bq"></div><div style="font-size:48px;font-weight:800;margin-top:14px">Sala ${pSala}</div><div style="font-size:18px;margin-top:6px;padding:0 20px;text-align:center;word-break:break-all">${lk()}</div><div style="margin-top:10px;color:#666">Toque para fechar</div>`;o.onclick=()=>o.remove();document.body.appendChild(o);new QRCode(document.getElementById('bq'),{text:lk(),width:z,height:z})}
+function drawProf(){const a=document.getElementById('app');a.classList.add('prof');if(!ONLINE){a.innerHTML='<h1>Painel do professor</h1><div class="c bad">Configure o Firebase no começo do arquivo (CONFIG) para usar o painel.</div>';return}
+if(!pOn){pOn=true;pSala=ls('mv_ps')||String(Math.floor(1000+Math.random()*9000));ls('mv_ps',pSala);
+a.innerHTML=`<div id="pg"><aside id="se"></aside><section><h1>📅 Uma Semana em Açailândia</h1>
+<div class="c row"><div><div class="mu">Código da sala</div><div class="big" style="text-align:left">${pSala}</div><div class="mu" style="word-break:break-all">${lk()}</div><p><button onclick="bigQR()">🔍 Ampliar QR code</button></p></div><div id="pq" onclick="bigQR()" style="cursor:zoom-in"></div></div>
+<details class="c" open><summary><b>Como funciona o jogo</b></summary><ol><li>Cada grupo cria a sua família e recebe condições sorteadas: trabalho, moradia, dívidas, reserva e saúde.</li><li><b>Segunda:</b> compras da semana e forma de pagamento (desconto à vista, parcelas com juros).</li><li><b>Terça a sábado:</b> um evento por dia, com decisões e contas de porcentagem. Se o saldo não cobre, vai para o fiado (+10%).</li><li><b>Domingo:</b> fechamento da semana, reserva e elaboração de um problema de porcentagem.</li><li><b>Pontuação:</b> saúde, bem-estar, reserva, juros pagos e acertos nas contas, ajustada pelas condições de partida de cada família.</li></ol>
+<p class="mu">Habilidades: EF07MA02 (acréscimos e decréscimos simples, cálculo mental e calculadora, educação financeira) e EF08MA04 (porcentagens com tecnologias digitais). Tempo previsto: 2 aulas de 50 minutos.</p></details>
+<details class="c"><summary><b>Dicas para a aula</b></summary><ul><li>Projete esta tela e toque no QR code para ampliar.</li><li>Os alunos não veem o cronômetro; o tempo aparece aqui e no resultado final.</li><li>Na roda final, compare as condições de partida de cada grupo e discuta por que a mesma decisão pesa diferente para cada família.</li><li>Toque em um desenho para removê-lo.</li></ul></details>
+<h2 id="pt">Grupos</h2><div id="pl"></div></section><aside id="sd"></aside></div>`;
+sides();new QRCode(document.getElementById('pq'),{text:lk(),width:150,height:150});
+db.ref('mv/'+pSala+'/grupos').on('value',sn=>{const o=Object.values(sn.val()||{}),gs=o.map(g=>{try{return norm(g)}catch(e){return null}}).filter(Boolean);
+document.getElementById('pt').textContent=`Grupos (${gs.length}) · concluídos: ${gs.filter(g=>g.step==='end').length}`;
+document.getElementById('pl').innerHTML=gs.map(card).join('')||'<p class="mu">Aguardando grupos…</p>'})}}
 function pts(g){const b=g.saude*8+g.bem*4+Math.floor(g.reserva/10)-Math.floor(g.juros/5)+g.ac*5+g.bo*3-(g.saldo<0?20:0);return[b,Math.round(b*(500/g.cond.ini))]}
 function card(g){const C=g.cond,[b,aj]=pts(g),fim=g.step==='end',tot=g.time.reduce((a,x)=>a+x,0)+(fim||!g.t?0:Date.now()-g.t),n=Object.keys(g.membros).length;
 const st=fim?'✅ concluído':g.step==='perfil'?'lendo o perfil':g.step==='prob'?'elaborando problema':`dia ${g.day} de 7`;
